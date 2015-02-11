@@ -20,6 +20,7 @@ import com.rarchives.ripme.ui.RipStatusHandler;
 import com.rarchives.ripme.ui.RipStatusMessage;
 import com.rarchives.ripme.ui.RipStatusMessage.STATUS;
 import com.rarchives.ripme.utils.Utils;
+import java.lang.reflect.InvocationTargetException;
 
 public abstract class AbstractRipper 
                 extends Observable
@@ -94,8 +95,22 @@ public abstract class AbstractRipper
      *      URL of the file
      * @param saveAs
      *      Path of the local file to save the content to.
+     * @return True on success, flase on failure.
      */
     public abstract boolean addURLToDownload(URL url, File saveAs);
+
+    /**
+     * Queues image to be downloaded and saved.
+     * @param url
+     *      URL of the file
+     * @param saveAs
+     *      Path of the local file to save the content to.
+     * @param referrer
+     *      The HTTP referrer to use while downloading this file.
+     * @param cookies
+     *      The cookies to send to the server while downloading this file.
+     * @return
+     */
     public abstract boolean addURLToDownload(URL url, File saveAs, String referrer, Map<String,String> cookies);
 
     public boolean addURLToDownload(URL url, String prefix, String subdirectory, String referrer, Map<String,String> cookies) {
@@ -142,6 +157,7 @@ public abstract class AbstractRipper
      *      Prefix to prepend to the saved filename.
      * @param subdirectory
      *      Sub-directory of the working directory to save the images to.
+     * @return True on success, flase on failure.
      */
     public boolean addURLToDownload(URL url, String prefix, String subdirectory) {
         return addURLToDownload(url, prefix, subdirectory, null, null);
@@ -154,6 +170,7 @@ public abstract class AbstractRipper
      *      URL to download
      * @param prefix
      *      Text to append to saved filename.
+     * @return True on success, flase on failure.
      */
     public boolean addURLToDownload(URL url, String prefix) {
         // Use empty subdirectory
@@ -196,7 +213,7 @@ public abstract class AbstractRipper
      * Notify observers that a download could not be completed,
      * but was not technically an "error".
      * @param url
-     * @param message
+     * @param file
      */
     public abstract void downloadExists(URL url, File file);
 
@@ -273,7 +290,13 @@ public abstract class AbstractRipper
             try {
                 AlbumRipper ripper = (AlbumRipper) constructor.newInstance(url);
                 return ripper;
-            } catch (Exception e) {
+            } catch (InstantiationException e) {
+                // Incompatible rippers *will* throw exceptions during instantiation.
+            } catch (IllegalAccessException e) {
+                // Incompatible rippers *will* throw exceptions during instantiation.
+            } catch (IllegalArgumentException e) {
+                // Incompatible rippers *will* throw exceptions during instantiation.
+            } catch (InvocationTargetException e) {
                 // Incompatible rippers *will* throw exceptions during instantiation.
             }
         }
@@ -281,7 +304,13 @@ public abstract class AbstractRipper
             try {
                 VideoRipper ripper = (VideoRipper) constructor.newInstance(url);
                 return ripper;
-            } catch (Exception e) {
+            } catch (InstantiationException e) {
+                // Incompatible rippers *will* throw exceptions during instantiation.
+            } catch (IllegalAccessException e) {
+                // Incompatible rippers *will* throw exceptions during instantiation.
+            } catch (IllegalArgumentException e) {
+                // Incompatible rippers *will* throw exceptions during instantiation.
+            } catch (InvocationTargetException e) {
                 // Incompatible rippers *will* throw exceptions during instantiation.
             }
         }
@@ -289,6 +318,8 @@ public abstract class AbstractRipper
     }
 
     /**
+     * @param pkg
+     *      The package name.
      * @return
      *      List of constructors for all eligible Rippers.
      * @throws Exception

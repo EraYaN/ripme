@@ -17,6 +17,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import com.rarchives.ripme.utils.Utils;
+import java.util.Arrays;
 
 public class UpdateUtils {
 
@@ -31,7 +32,7 @@ public class UpdateUtils {
         String thisVersion = UpdateUtils.class.getPackage().getImplementationVersion();
         if (thisVersion == null) {
             // Version is null if we're not running from the JAR
-            thisVersion = DEFAULT_VERSION; ; // Super-high version number
+            thisVersion = DEFAULT_VERSION; // Super-high version number
         }
         return thisVersion;
     }
@@ -64,7 +65,7 @@ public class UpdateUtils {
             if (change.startsWith(UpdateUtils.getThisJarVersion() + ":")) {
                 break;
             }
-            changeList.append("<br>  + " + change);
+            changeList.append("<br>  + ").append(change);
         }
 
         String latestVersion = json.getString("latestVersion");
@@ -104,7 +105,7 @@ public class UpdateUtils {
         int[] oldVersions = versionStringToInt(getThisJarVersion());
         int[] newVersions = versionStringToInt(latestVersion);
         if (oldVersions.length < newVersions.length) {
-            System.err.println("Calculated: " + oldVersions + " < " + latestVersion);
+            System.err.println("Calculated: " + getThisJarVersion() + " < " + latestVersion);
             return true;
         }
 
@@ -116,10 +117,7 @@ public class UpdateUtils {
             else if (newVersions[i] < oldVersions[i]) {
                 logger.debug("oldVersion " + getThisJarVersion() + " > latestVersion " + latestVersion);
                 return false;
-            }
-            else {
-                continue;
-            }
+            }            
         }
 
         // At this point, the version numbers are exactly the same.
@@ -195,6 +193,7 @@ public class UpdateUtils {
                     logger.info("Executing: " + batchFile);
                     Runtime.getRuntime().exec(batchExec);
                 } catch (IOException e) {
+                    //TODO implement proper stack trace handling this is really just intented as a placeholder until you implement proper error handling            
                     e.printStackTrace();
                 }
             }
