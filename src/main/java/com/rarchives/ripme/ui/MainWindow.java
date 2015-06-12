@@ -71,11 +71,13 @@ import org.apache.log4j.Logger;
 import com.rarchives.ripme.ripper.AbstractRipper;
 import com.rarchives.ripme.utils.RipUtils;
 import com.rarchives.ripme.utils.Utils;
+import java.awt.AWTException;
+import javax.swing.UnsupportedLookAndFeelException;
 
 /**
  * Everything UI-related starts and ends here.
  */
-public class MainWindow implements Runnable, RipStatusHandler {
+public final class MainWindow implements Runnable, RipStatusHandler {
 
     private static final Logger logger = Logger.getLogger(MainWindow.class);
     
@@ -242,10 +244,16 @@ public class MainWindow implements Runnable, RipStatusHandler {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 2; gbc.ipadx = 2; gbc.gridx = 0;
         gbc.weighty = 2; gbc.ipady = 2; gbc.gridy = 0;
-        
+                
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
+        } catch (ClassNotFoundException e) {
+            logger.error("[!] Exception setting system theme:", e);
+        } catch (InstantiationException e) {
+            logger.error("[!] Exception setting system theme:", e);
+        } catch (IllegalAccessException e) {
+            logger.error("[!] Exception setting system theme:", e);
+        } catch (UnsupportedLookAndFeelException e) {
             logger.error("[!] Exception setting system theme:", e);
         }
 
@@ -261,12 +269,13 @@ public class MainWindow implements Runnable, RipStatusHandler {
         } catch (Exception e) { }
         JPanel ripPanel = new JPanel(new GridBagLayout());
         ripPanel.setBorder(emptyBorder);
-
-        gbc.gridx = 0; ripPanel.add(new JLabel("URL:", JLabel.RIGHT), gbc);
-        gbc.gridx = 1; ripPanel.add(ripTextfield, gbc);
-        gbc.gridx = 2; ripPanel.add(ripButton, gbc);
-        gbc.gridx = 3; ripPanel.add(stopButton, gbc);
-
+        
+        gbc.gridx = 0; gbc.fill = GridBagConstraints.HORIZONTAL; ripPanel.add(new JLabel("URL:", JLabel.RIGHT), gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; ripPanel.add(ripTextfield, gbc);
+        gbc.gridx = 2; gbc.fill = GridBagConstraints.HORIZONTAL; ripPanel.add(ripButton, gbc);
+        gbc.gridx = 3; gbc.fill = GridBagConstraints.HORIZONTAL; ripPanel.add(stopButton, gbc);
+        gbc.fill = GridBagConstraints.BOTH;
+        
         statusLabel  = new JLabel("Inactive");
         statusLabel.setHorizontalAlignment(JLabel.CENTER);
         openButton = new JButton();
@@ -323,6 +332,7 @@ public class MainWindow implements Runnable, RipStatusHandler {
             public String getColumnName(int col) {
                 return HISTORY.getColumnName(col);
             }
+            @Override
             public Class<? extends Object> getColumnClass(int c) {
                 return getValueAt(0, c).getClass();
             }
@@ -620,7 +630,7 @@ public class MainWindow implements Runnable, RipStatusHandler {
         historyButtonRerip.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (HISTORY.toList().size() == 0) {
+                if (HISTORY.isEmpty()) {
                     JOptionPane.showMessageDialog(null,
                                                   "There are no history entries to re-rip. Rip some albums first",
                                                   "RipMe Error",
@@ -640,7 +650,6 @@ public class MainWindow implements Runnable, RipStatusHandler {
                                                   "Check an entry by clicking the checkbox to the right of the URL or Right-click a URL to check/uncheck all items",
                                                   "RipMe Error",
                                                   JOptionPane.ERROR_MESSAGE);
-                    return;
                 }
             }
         });
@@ -775,9 +784,13 @@ public class MainWindow implements Runnable, RipStatusHandler {
 
     private void setupTrayIcon() {
         mainFrame.addWindowListener(new WindowAdapter() {
+            @Override
             public void windowActivated(WindowEvent e)   { trayMenuMain.setLabel("Hide"); }
+            @Override
             public void windowDeactivated(WindowEvent e) { trayMenuMain.setLabel("Show"); }
+            @Override
             public void windowDeiconified(WindowEvent e) { trayMenuMain.setLabel("Hide"); }
+            @Override
             public void windowIconified(WindowEvent e)   { trayMenuMain.setLabel("Show"); }
         });
         PopupMenu trayMenu = new PopupMenu();
@@ -883,7 +896,11 @@ public class MainWindow implements Runnable, RipStatusHandler {
                     mainFrame.setAlwaysOnTop(false);
                 }
             });
-        } catch (Exception e) {
+        } catch (IOException e) {
+            //TODO implement proper stack trace handling this is really just intented as a placeholder until you implement proper error handling
+            e.printStackTrace();
+        } catch (AWTException e) {
+            //TODO implement proper stack trace handling this is really just intented as a placeholder until you implement proper error handling
             e.printStackTrace();
         }
     }
@@ -970,13 +987,13 @@ public class MainWindow implements Runnable, RipStatusHandler {
 
     private void ripNextAlbum() {
         isRipping = true;
-        if (queueListModel.size() == 0) {
+        if (queueListModel.isEmpty()) {
             // End of queue
             isRipping = false;
             return;
         }
         String nextAlbum = (String) queueListModel.remove(0);
-        if (queueListModel.size() == 0) {
+        if (queueListModel.isEmpty()) {
             optionQueue.setText("Queue");
         }
         else {
