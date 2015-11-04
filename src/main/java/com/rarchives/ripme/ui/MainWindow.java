@@ -30,6 +30,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -408,6 +409,14 @@ public final class MainWindow implements Runnable, RipStatusHandler {
         queueListScroll = new JScrollPane(queueList,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        for (String item : Utils.getConfigList("queue")) {
+            queueListModel.addElement(item);
+        }
+        if (queueListModel.size() > 0) {
+            optionQueue.setText("Queue (" + queueListModel.size() + ")");
+        } else {
+            optionQueue.setText("Queue");
+        }
         gbc.gridx = 0;
         JPanel queueListPanel = new JPanel(new GridBagLayout());
         queueListPanel.add(queueListScroll, gbc);
@@ -985,8 +994,13 @@ public final class MainWindow implements Runnable, RipStatusHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void ripNextAlbum() {
         isRipping = true;
+
+        // Save current state of queue to configuration.
+        Utils.setConfigList("queue", (Enumeration<Object>) queueListModel.elements());
+
         if (queueListModel.isEmpty()) {
             // End of queue
             isRipping = false;
@@ -1074,7 +1088,7 @@ public final class MainWindow implements Runnable, RipStatusHandler {
 
     class RipButtonHandler implements ActionListener {
         public void actionPerformed(ActionEvent event) {
-            if (!queueListModel.contains(ripTextfield.getText())) {
+            if (!queueListModel.contains(ripTextfield.getText()) && !ripTextfield.getText().equals("")) {
                 queueListModel.add(queueListModel.size(), ripTextfield.getText());
                 ripTextfield.setText("");
             }
